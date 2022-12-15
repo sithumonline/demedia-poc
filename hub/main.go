@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/sithumonline/demedia-poc/core/config"
+	"github.com/sithumonline/demedia-poc/core/pb"
 	"github.com/sithumonline/demedia-poc/hub/database"
-	"github.com/sithumonline/demedia-poc/hub/pb"
 	"github.com/sithumonline/demedia-poc/hub/transact/todo"
 	"google.golang.org/grpc"
 	"log"
@@ -13,7 +14,7 @@ import (
 )
 
 func main() {
-	listen, err := net.Listen("tcp", "127.0.0.1:9090")
+	listen, err := net.Listen("tcp", config.GetTargetAddress())
 	if err != nil {
 		log.Panic(err)
 	}
