@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package pb;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/sithumonline/demedia-poc/hub/pb";
+
+message Todo {
+  string id = 1;
+  string title = 2;
+  string task = 3;
+}
+
+message Todos {
+  repeated Todo todos = 1;
+}
+
+message ID {
+  string id = 1;
+}
+
+service CRUD {
+  rpc CreateItem (Todo) returns (ID) {}
+  rpc ReadItem (ID) returns (Todo) {}
+  rpc UpdateItem (Todo) returns (ID) {}
+  rpc DeleteItem (ID) returns (ID) {}
+  rpc GetAllItem (google.protobuf.Empty) returns (Todos) {}
+  rpc Migrate (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
