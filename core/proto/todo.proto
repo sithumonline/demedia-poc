@@ -4,7 +4,7 @@ package pb;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/sithumonline/demedia-poc/hub/pb";
+option go_package = "github.com/sithumonline/demedia-poc/peer/pb";
 
 message Todo {
   string id = 1;
