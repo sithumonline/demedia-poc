@@ -1,8 +1,8 @@
 package utility
 
 import (
-	"github.com/sithumonline/demedia-poc/hub/models"
-	"github.com/sithumonline/demedia-poc/hub/pb"
+	"github.com/sithumonline/demedia-poc/core/models"
+	"github.com/sithumonline/demedia-poc/core/pb"
 )
 
 func GetTodoModel(todo *pb.Todo) *models.Todo {
