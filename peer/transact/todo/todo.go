@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/sithumonline/demedia-poc/core/models"
-	pb2 "github.com/sithumonline/demedia-poc/core/pb"
+	"github.com/sithumonline/demedia-poc/core/pb"
 	"github.com/sithumonline/demedia-poc/core/utility"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
@@ -12,7 +12,7 @@ import (
 )
 
 type TodoServiceServer struct {
-	pb2.UnimplementedCRUDServer
+	pb.UnimplementedCRUDServer
 	db *gorm.DB
 }
 
@@ -22,7 +22,7 @@ func NewTodoServiceServer(db *gorm.DB) TodoServiceServer {
 	}
 }
 
-func (t *TodoServiceServer) CreateItem(ctx context.Context, todo *pb2.Todo) (*pb2.ID, error) {
+func (t *TodoServiceServer) CreateItem(ctx context.Context, todo *pb.Todo) (*pb.ID, error) {
 	d := utility.GetTodoModel(todo)
 	d.Id = uuid.New().String()
 	if result := t.db.Create(d); result.Error != nil {
@@ -33,7 +33,7 @@ func (t *TodoServiceServer) CreateItem(ctx context.Context, todo *pb2.Todo) (*pb
 	return utility.SetIdModel(d), nil
 }
 
-func (t *TodoServiceServer) ReadItem(ctx context.Context, todo *pb2.ID) (*pb2.Todo, error) {
+func (t *TodoServiceServer) ReadItem(ctx context.Context, todo *pb.ID) (*pb.Todo, error) {
 	d := &models.Todo{}
 	if result := t.db.Where("id = ?", todo.GetId()).First(d); result.Error != nil {
 		log.Printf("failed to find todo: %+v: %v", todo, result.Error)
@@ -43,7 +43,7 @@ func (t *TodoServiceServer) ReadItem(ctx context.Context, todo *pb2.ID) (*pb2.To
 	return utility.SetTodoModel(d), nil
 }
 
-func (t *TodoServiceServer) UpdateItem(ctx context.Context, todo *pb2.Todo) (*pb2.ID, error) {
+func (t *TodoServiceServer) UpdateItem(ctx context.Context, todo *pb.Todo) (*pb.ID, error) {
 	d := utility.GetTodoModel(todo)
 	if result := t.db.Model(&models.Todo{}).Where("id = ?", todo.GetId()).Updates(d); result.Error != nil {
 		log.Printf("failed to update todo: %+v: %v", todo, result.Error)
@@ -53,7 +53,7 @@ func (t *TodoServiceServer) UpdateItem(ctx context.Context, todo *pb2.Todo) (*pb
 	return utility.SetIdModel(d), nil
 }
 
-func (t *TodoServiceServer) DeleteItem(ctx context.Context, todo *pb2.ID) (*pb2.ID, error) {
+func (t *TodoServiceServer) DeleteItem(ctx context.Context, todo *pb.ID) (*pb.ID, error) {
 	if result := t.db.Model(&models.Todo{}).Where("id = ?", todo.GetId()).Delete(&models.Todo{}); result.Error != nil {
 		log.Printf("failed to delete todo: %+v: %v", todo, result.Error)
 		return nil, result.Error
@@ -62,23 +62,23 @@ func (t *TodoServiceServer) DeleteItem(ctx context.Context, todo *pb2.ID) (*pb2.
 	return todo, nil
 }
 
-func (t *TodoServiceServer) GetAllItem(ctx context.Context, todo *emptypb.Empty) (*pb2.Todos, error) {
+func (t *TodoServiceServer) GetAllItem(ctx context.Context, todo *emptypb.Empty) (*pb.Todos, error) {
 	list := make([]models.Todo, 0)
 	if result := t.db.Find(&list); result.Error != nil {
 		log.Printf("failed to find todos: %+v: %v", todo, result.Error)
 		return nil, result.Error
 	}
 
-	todos := make([]*pb2.Todo, 0)
+	todos := make([]*pb.Todo, 0)
 	for _, l := range list {
-		todos = append(todos, &pb2.Todo{
+		todos = append(todos, &pb.Todo{
 			Id:    l.Id,
 			Title: l.Title,
 			Task:  l.Task,
 		})
 	}
 
-	return &pb2.Todos{
+	return &pb.Todos{
 		Todos: todos,
 	}, nil
 }
