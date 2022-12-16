@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	ProtocolId = "/p2p/1.0.0"
+	ProtocolId      = "/p2p/1.0.0"
+	AddressFilePath = "../host_address"
 )
 
 func GetTargetAddressPort() (int, string) {

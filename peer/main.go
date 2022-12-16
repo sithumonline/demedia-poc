@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/libp2p/go-libp2p"
 	gorpc "github.com/libp2p/go-libp2p-gorpc"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/pb"
+	"github.com/sithumonline/demedia-poc/core/utility"
 	"github.com/sithumonline/demedia-poc/peer/database"
 	"github.com/sithumonline/demedia-poc/peer/transact/ping"
 	"github.com/sithumonline/demedia-poc/peer/transact/todo"
@@ -44,13 +44,10 @@ func main() {
 		}
 	}()
 
-	h, err := libp2p.New(libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/127.0.0.1/tcp/%d", port+1)))
-	if err != nil {
-		log.Panic(err)
-	}
-	log.Printf("Hello World, my hosts ID is %s\n", h.ID().String())
+	h := utility.GetHost(port + 1)
+	log.Printf("peer hosts ID: %s\n", h.ID().String())
 
-	ma, err := multiaddr.NewMultiaddr("/ip4/127.0.0.1/tcp/10812/p2p/12D3KooWRKLK8xQqXkSZ5CtyiEjLtvwPKvmax6FqeLNNkosCLtDP")
+	ma, err := multiaddr.NewMultiaddr(utility.ReadFile())
 	if err != nil {
 		log.Panic(err)
 	}
@@ -66,11 +63,8 @@ func main() {
 	rpcClient := gorpc.NewClient(h, config.ProtocolId)
 
 	var reply ping.PingReply
-	var args ping.PingArgs
 
-	args.Data = []byte(address)
-
-	err = rpcClient.Call(peerInfo.ID, "PingService", "Ping", args, &reply)
+	err = rpcClient.Call(peerInfo.ID, "PingService", "Ping", ping.PingArgs{Data: []byte(address)}, &reply)
 	if err != nil {
 		log.Panic(err)
 	}
