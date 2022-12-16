@@ -9,8 +9,8 @@ import (
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/pb"
 	"github.com/sithumonline/demedia-poc/core/utility"
+	"github.com/sithumonline/demedia-poc/hub/transact/ping"
 	"github.com/sithumonline/demedia-poc/peer/database"
-	"github.com/sithumonline/demedia-poc/peer/transact/ping"
 	"github.com/sithumonline/demedia-poc/peer/transact/todo"
 	"google.golang.org/grpc"
 	"log"
@@ -64,7 +64,7 @@ func main() {
 
 	var reply ping.PingReply
 
-	err = rpcClient.Call(peerInfo.ID, "PingService", "Ping", ping.PingArgs{Data: []byte(address)}, &reply)
+	err = rpcClient.Call(peerInfo.ID, "PingService", "Ping", ping.PingArgs{Data: []byte(fmt.Sprintf("%s;%s", address, h.ID().String()))}, &reply)
 	if err != nil {
 		log.Panic(err)
 	}

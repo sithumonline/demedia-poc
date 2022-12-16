@@ -7,12 +7,12 @@ import (
 	"log"
 )
 
-func Client(address string) pb.CRUDClient {
+func Client(address string) (pb.CRUDClient, *grpc.ClientConn) {
 	// Setup connection
 	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return pb.NewCRUDClient(conn)
+	return pb.NewCRUDClient(conn), conn
 }

@@ -4,21 +4,19 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/sithumonline/demedia-poc/core/models"
-	"github.com/sithumonline/demedia-poc/core/pb"
 	"github.com/sithumonline/demedia-poc/core/utility"
+	"github.com/sithumonline/demedia-poc/hub/client"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
 	"net/http"
 )
 
 type TodoServiceServer struct {
-	client pb.CRUDClient
+	db map[string]string
 }
 
-func NewTodoServiceServer(client pb.CRUDClient) TodoServiceServer {
-	return TodoServiceServer{
-		client: client,
-	}
+func NewTodoServiceServer(db map[string]string) TodoServiceServer {
+	return TodoServiceServer{db: db}
 }
 
 func (t *TodoServiceServer) CreateItem(c *gin.Context) {
@@ -28,7 +26,9 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	list, err := t.client.CreateItem(context.Background(), utility.SetTodoModel(&input))
+	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]])
+	defer conn.Close()
+	list, err := cl.CreateItem(context.Background(), utility.SetTodoModel(&input))
 	if err != nil {
 		log.Printf("failed to find todos: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -38,7 +38,9 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 }
 
 func (t *TodoServiceServer) ReadItem(c *gin.Context) {
-	d, err := t.client.ReadItem(context.Background(), utility.SetIdModel(&models.Todo{
+	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]])
+	defer conn.Close()
+	d, err := cl.ReadItem(context.Background(), utility.SetIdModel(&models.Todo{
 		Id: c.Param("id"),
 	}))
 	if err != nil {
@@ -57,7 +59,9 @@ func (t *TodoServiceServer) UpdateItem(c *gin.Context) {
 		return
 	}
 	input.Id = c.Param("id")
-	d, err := t.client.UpdateItem(context.Background(), utility.SetTodoModel(&input))
+	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]])
+	defer conn.Close()
+	d, err := cl.UpdateItem(context.Background(), utility.SetTodoModel(&input))
 	if err != nil {
 		log.Printf("failed to update todo: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -67,7 +71,9 @@ func (t *TodoServiceServer) UpdateItem(c *gin.Context) {
 }
 
 func (t *TodoServiceServer) DeleteItem(c *gin.Context) {
-	d, err := t.client.DeleteItem(context.Background(), utility.SetIdModel(&models.Todo{
+	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]])
+	defer conn.Close()
+	d, err := cl.DeleteItem(context.Background(), utility.SetIdModel(&models.Todo{
 		Id: c.Param("id"),
 	}))
 	if err != nil {
@@ -79,11 +85,17 @@ func (t *TodoServiceServer) DeleteItem(c *gin.Context) {
 }
 
 func (t *TodoServiceServer) GetAllItem(c *gin.Context) {
-	list, err := t.client.GetAllItem(context.Background(), &emptypb.Empty{})
+	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]])
+	defer conn.Close()
+	list, err := cl.GetAllItem(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		log.Printf("failed to find todos: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": list})
+}
+
+func (t *TodoServiceServer) GetAllPeer(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"data": t.db})
 }
