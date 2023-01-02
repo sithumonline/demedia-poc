@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/libp2p/go-libp2p"
 	gorpc "github.com/libp2p/go-libp2p-gorpc"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/sithumonline/demedia-poc/core/config"
@@ -27,10 +25,7 @@ func main() {
 	r.GET("/peer", todoService.GetAllPeer)
 
 	port, _ := config.GetTargetAddressPort()
-	h, err := libp2p.New(libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/127.0.0.1/tcp/%d", port)))
-	if err != nil {
-		log.Panic(err)
-	}
+	h := utility.GetHost(port)
 	rpcHost := gorpc.NewServer(h, config.ProtocolId)
 	log.Printf("hub hosts ID: %s\n", h.ID().String())
 
