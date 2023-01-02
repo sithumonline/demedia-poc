@@ -1,6 +1,8 @@
 package utility
 
 import (
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/models"
 	"github.com/sithumonline/demedia-poc/core/pb"
 )
@@ -25,4 +27,20 @@ func SetIdModel(todo *models.Todo) *pb.ID {
 	return &pb.ID{
 		Id: todo.Id,
 	}
+}
+
+func GenKeyPair(writeToFile bool) (crypto.PrivKey, error) {
+	privateKey, _, err := crypto.GenerateKeyPair(crypto.ECDSA, 256)
+	if err != nil {
+		return nil, err
+	}
+	encPrivateKey, err := crypto.MarshalPrivateKey(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	//return encPrivateKey
+	if writeToFile {
+		WriteFile(string(encPrivateKey), config.IpfsPrivateKeyPath)
+	}
+	return privateKey, nil
 }

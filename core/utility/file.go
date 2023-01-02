@@ -7,15 +7,21 @@ import (
 	"os"
 )
 
-func WriteFile(data string) {
-	err := os.WriteFile(config.AddressFilePath, []byte(fmt.Sprintf("%s", data)), 0644)
+func WriteFile(data string, path string) {
+	if path == "" {
+		path = config.AddressFilePath
+	}
+	err := os.WriteFile(path, []byte(fmt.Sprintf("%s", data)), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func ReadFile() string {
-	dat, err := os.ReadFile(config.AddressFilePath)
+func ReadFile(path string) string {
+	if path == "" {
+		path = config.AddressFilePath
+	}
+	dat, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalln(err)
 	}

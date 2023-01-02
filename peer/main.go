@@ -44,10 +44,10 @@ func main() {
 		}
 	}()
 
-	h := utility.GetHost(port + 1)
+	h := utility.GetHost(port+1, true)
 	log.Printf("peer hosts ID: %s\n", h.ID().String())
 
-	ma, err := multiaddr.NewMultiaddr(utility.ReadFile())
+	ma, err := multiaddr.NewMultiaddr(utility.ReadFile(""))
 	if err != nil {
 		log.Panic(err)
 	}

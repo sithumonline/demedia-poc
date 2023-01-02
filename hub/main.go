@@ -25,7 +25,7 @@ func main() {
 	r.GET("/peer", todoService.GetAllPeer)
 
 	port, _ := config.GetTargetAddressPort()
-	h := utility.GetHost(port)
+	h := utility.GetHost(port, false)
 	rpcHost := gorpc.NewServer(h, config.ProtocolId)
 	log.Printf("hub hosts ID: %s\n", h.ID().String())
 
@@ -35,7 +35,7 @@ func main() {
 		log.Panic(err)
 	}
 	peerAddr := addr.Encapsulate(ipfsAddr)
-	utility.WriteFile(peerAddr.String())
+	utility.WriteFile(peerAddr.String(), "")
 	if err != nil {
 		log.Panic(err)
 	}
