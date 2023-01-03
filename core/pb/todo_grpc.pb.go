@@ -41,7 +41,7 @@ func NewCRUDClient(cc grpc.ClientConnInterface) CRUDClient {
 
 func (c *cRUDClient) CreateItem(ctx context.Context, in *Todo, opts ...grpc.CallOption) (*ID, error) {
 	out := new(ID)
-	err := c.cc.Invoke(ctx, "/pb.CRUD/CreateItem", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.CRUD/createItem", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c *cRUDClient) DeleteItem(ctx context.Context, in *ID, opts ...grpc.CallOp
 
 func (c *cRUDClient) GetAllItem(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Todos, error) {
 	out := new(Todos)
-	err := c.cc.Invoke(ctx, "/pb.CRUD/GetAllItem", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.CRUD/getAllItem", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ type UnimplementedCRUDServer struct {
 }
 
 func (UnimplementedCRUDServer) CreateItem(context.Context, *Todo) (*ID, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateItem not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method createItem not implemented")
 }
 func (UnimplementedCRUDServer) ReadItem(context.Context, *ID) (*Todo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReadItem not implemented")
@@ -123,7 +123,7 @@ func (UnimplementedCRUDServer) DeleteItem(context.Context, *ID) (*ID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteItem not implemented")
 }
 func (UnimplementedCRUDServer) GetAllItem(context.Context, *emptypb.Empty) (*Todos, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAllItem not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method getAllItem not implemented")
 }
 func (UnimplementedCRUDServer) Migrate(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Migrate not implemented")
@@ -151,7 +151,7 @@ func _CRUD_CreateItem_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.CRUD/CreateItem",
+		FullMethod: "/pb.CRUD/createItem",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CRUDServer).CreateItem(ctx, req.(*Todo))
@@ -223,7 +223,7 @@ func _CRUD_GetAllItem_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.CRUD/GetAllItem",
+		FullMethod: "/pb.CRUD/getAllItem",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CRUDServer).GetAllItem(ctx, req.(*emptypb.Empty))
@@ -257,7 +257,7 @@ var CRUD_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*CRUDServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateItem",
+			MethodName: "createItem",
 			Handler:    _CRUD_CreateItem_Handler,
 		},
 		{
@@ -273,7 +273,7 @@ var CRUD_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CRUD_DeleteItem_Handler,
 		},
 		{
-			MethodName: "GetAllItem",
+			MethodName: "getAllItem",
 			Handler:    _CRUD_GetAllItem_Handler,
 		},
 		{

@@ -235,17 +235,17 @@ var file_todo_proto_goTypes = []interface{}{
 }
 var file_todo_proto_depIdxs = []int32{
 	0, // 0: pb.Todos.todos:type_name -> pb.Todo
-	0, // 1: pb.CRUD.CreateItem:input_type -> pb.Todo
+	0, // 1: pb.CRUD.createItem:input_type -> pb.Todo
 	2, // 2: pb.CRUD.ReadItem:input_type -> pb.ID
 	0, // 3: pb.CRUD.UpdateItem:input_type -> pb.Todo
 	2, // 4: pb.CRUD.DeleteItem:input_type -> pb.ID
-	3, // 5: pb.CRUD.GetAllItem:input_type -> google.protobuf.Empty
+	3, // 5: pb.CRUD.getAllItem:input_type -> google.protobuf.Empty
 	3, // 6: pb.CRUD.Migrate:input_type -> google.protobuf.Empty
-	2, // 7: pb.CRUD.CreateItem:output_type -> pb.ID
+	2, // 7: pb.CRUD.createItem:output_type -> pb.ID
 	0, // 8: pb.CRUD.ReadItem:output_type -> pb.Todo
 	2, // 9: pb.CRUD.UpdateItem:output_type -> pb.ID
 	2, // 10: pb.CRUD.DeleteItem:output_type -> pb.ID
-	1, // 11: pb.CRUD.GetAllItem:output_type -> pb.Todos
+	1, // 11: pb.CRUD.getAllItem:output_type -> pb.Todos
 	3, // 12: pb.CRUD.Migrate:output_type -> google.protobuf.Empty
 	7, // [7:13] is the sub-list for method output_type
 	1, // [1:7] is the sub-list for method input_type

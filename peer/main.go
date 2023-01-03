@@ -12,6 +12,7 @@ import (
 	"github.com/sithumonline/demedia-poc/core/utility"
 	"github.com/sithumonline/demedia-poc/hub/transact/ping"
 	"github.com/sithumonline/demedia-poc/peer/database"
+	"github.com/sithumonline/demedia-poc/peer/transact/bridge"
 	"github.com/sithumonline/demedia-poc/peer/transact/todo"
 	"google.golang.org/grpc"
 	"log"
@@ -29,7 +30,8 @@ func main() {
 
 	// gRPC server
 	s := grpc.NewServer()
-	todoService := todo.NewTodoServiceServer(database.Database("postgres://tenulyil:jJzwdOfsftWnJ9T16zWvW3zxallU-8J0@mahmud.db.elephantsql.com/tenulyil"))
+	db := database.Database("postgres://tenulyil:jJzwdOfsftWnJ9T16zWvW3zxallU-8J0@mahmud.db.elephantsql.com/tenulyil")
+	todoService := todo.NewTodoServiceServer(db)
 	pb.RegisterCRUDServer(s, &todoService)
 
 	// graceful shutdown
@@ -74,11 +76,25 @@ func main() {
 
 	var reply ping.PingReply
 
-	err = rpcClient.Call(peerInfo.ID, "PingService", "Ping", ping.PingArgs{Data: []byte(fmt.Sprintf("%s;%s", address, h.ID().String()))}, &reply)
+	err = rpcClient.Call(
+		peerInfo.ID,
+		"PingService",
+		"Ping",
+		ping.PingArgs{
+			Data: []byte(fmt.Sprintf("%s;%s", h.Addrs()[0].String(), h.ID().String())),
+		},
+		&reply,
+	)
 	if err != nil {
 		log.Panic(err)
 	}
 	log.Printf("bytes from %s (%s): %s\n", peerInfo.ID.String(), peerInfo.Addrs[0].String(), reply.Data)
+
+	rpcHost := gorpc.NewServer(h, config.ProtocolId)
+	bridgeService := bridge.NewBridgeService(db)
+	if err := rpcHost.Register(bridgeService); err != nil {
+		log.Panic("failed to register rpc server", "err", err)
+	}
 
 	log.Printf("hosting server on: %s\n", listen.Addr().String())
 	if err := s.Serve(listen); err != nil {

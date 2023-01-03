@@ -2,6 +2,7 @@ package ping
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 )
@@ -25,7 +26,7 @@ func (t *PingService) Ping(ctx context.Context, argType PingArgs, replyType *Pin
 	log.Printf("Received a Ping call, message: %s\n", data)
 
 	adds := strings.Split(data, ";")
-	t.db[adds[1]] = adds[0]
+	t.db[adds[1]] = fmt.Sprintf("%s/p2p/%s", adds[0], adds[1])
 
 	replyType.Data = []byte("Pong")
 	return nil

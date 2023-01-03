@@ -15,7 +15,9 @@ func main() {
 	r := gin.Default()
 
 	var db = make(map[string]string)
-	todoService := todo.NewTodoServiceServer(db)
+	port, _ := config.GetTargetAddressPort()
+	h := utility.GetHost(port, false)
+	todoService := todo.NewTodoServiceServer(db, h)
 
 	r.GET("/todo", todoService.GetAllItem)
 	r.POST("/todo", todoService.CreateItem)
@@ -24,8 +26,6 @@ func main() {
 	r.DELETE("/todo/:id", todoService.DeleteItem)
 	r.GET("/peer", todoService.GetAllPeer)
 
-	port, _ := config.GetTargetAddressPort()
-	h := utility.GetHost(port, false)
 	rpcHost := gorpc.NewServer(h, config.ProtocolId)
 	log.Printf("hub hosts ID: %s\n", h.ID().String())
 
