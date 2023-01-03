@@ -17,7 +17,12 @@ func GetHost(port int, isPeer bool) host.Host {
 	if isPeer {
 		prvKey, err = GenKeyPair(false)
 	} else {
-		prvKey, err = crypto.UnmarshalPrivateKey([]byte(ReadFile(config.IpfsPrivateKeyPath)))
+		pk := ReadFile(config.IpfsPrivateKeyPath)
+		if pk == "file_does_not_exist" {
+			prvKey, err = GenKeyPair(true)
+		} else {
+			prvKey, err = crypto.UnmarshalPrivateKey([]byte(pk))
+		}
 	}
 	if err != nil {
 		log.Panic(err)

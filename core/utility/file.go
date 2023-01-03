@@ -1,8 +1,10 @@
 package utility
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sithumonline/demedia-poc/core/config"
+	"io/fs"
 	"log"
 	"os"
 )
@@ -22,7 +24,9 @@ func ReadFile(path string) string {
 		path = config.AddressFilePath
 	}
 	dat, err := os.ReadFile(path)
-	if err != nil {
+	if errors.Is(err, fs.ErrNotExist) {
+		return "file_does_not_exist"
+	} else if err != nil {
 		log.Fatalln(err)
 	}
 	return string(dat)

@@ -38,7 +38,6 @@ func GenKeyPair(writeToFile bool) (crypto.PrivKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	//return encPrivateKey
 	if writeToFile {
 		WriteFile(string(encPrivateKey), config.IpfsPrivateKeyPath)
 		encPublicKey, err := crypto.MarshalPublicKey(privateKey.GetPublic())
