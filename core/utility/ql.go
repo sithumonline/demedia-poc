@@ -1,4 +1,4 @@
-package bridge_ql
+package utility
 
 import (
 	"context"
@@ -15,7 +15,10 @@ import (
 func QlCall(
 	h host.Host,
 	ctx context.Context,
-	input interface{}, peerAddr string,
+	input interface{},
+	peerAddr string,
+	serviceName string,
+	serviceMethod string,
 	method string,
 ) (
 	bridge.BridgeReply,
@@ -50,8 +53,8 @@ func QlCall(
 
 	err = rpcClient.Call(
 		peerInfo.ID,
-		"BridgeService",
-		"Ql",
+		serviceName,
+		serviceMethod,
 		bridge.BridgeArgs{Data: args},
 		&reply,
 	)

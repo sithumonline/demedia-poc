@@ -36,9 +36,6 @@ func main() {
 	}
 	peerAddr := addr.Encapsulate(ipfsAddr)
 	utility.WriteFile(peerAddr.String(), "")
-	if err != nil {
-		log.Panic(err)
-	}
 	log.Printf("hub listening on %s\n", peerAddr)
 
 	pingService := ping.NewPingService(db)

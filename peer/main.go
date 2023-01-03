@@ -2,15 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	gorpc "github.com/libp2p/go-libp2p-gorpc"
-	"github.com/libp2p/go-libp2p/core/crypto"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/pb"
 	"github.com/sithumonline/demedia-poc/core/utility"
-	"github.com/sithumonline/demedia-poc/hub/transact/ping"
 	"github.com/sithumonline/demedia-poc/peer/database"
 	"github.com/sithumonline/demedia-poc/peer/transact/bridge"
 	"github.com/sithumonline/demedia-poc/peer/transact/todo"
@@ -48,47 +44,19 @@ func main() {
 	}()
 
 	h := utility.GetHost(port+1, true)
-	log.Printf("peer hosts ID: %s\n", h.ID().String())
+	addr := h.Addrs()[0]
+	ipfsAddr, err := multiaddr.NewMultiaddr("/ipfs/" + h.ID().String())
+	if err != nil {
+		log.Panic(err)
+	}
+	peerAddr := addr.Encapsulate(ipfsAddr)
+	log.Printf("peer listening on %s\n", peerAddr)
 
-	pubKey, err := crypto.UnmarshalPublicKey([]byte(utility.ReadFile(config.IpfsPublicKeyPath)))
+	reply, err := utility.QlCall(h, ctx, peerAddr.String(), utility.ReadFile(""), "PingService", "Ping", "")
 	if err != nil {
 		log.Panic(err)
 	}
-	id, err := peer.IDFromPublicKey(pubKey)
-	if err != nil {
-		log.Panic(err)
-	}
-	ma, err := multiaddr.NewMultiaddr(utility.ReadFile(""))
-	if err != nil {
-		log.Panic(err)
-	}
-	peerInfo, err := peer.AddrInfoFromP2pAddr(ma)
-	if err != nil {
-		log.Panic(err)
-	}
-	log.Printf("hub host ID and peerInfor ID is equeal : %t", id == peerInfo.ID)
-
-	err = h.Connect(ctx, *peerInfo)
-	if err != nil {
-		log.Panic(err)
-	}
-	rpcClient := gorpc.NewClient(h, config.ProtocolId)
-
-	var reply ping.PingReply
-
-	err = rpcClient.Call(
-		peerInfo.ID,
-		"PingService",
-		"Ping",
-		ping.PingArgs{
-			Data: []byte(fmt.Sprintf("%s;%s", h.Addrs()[0].String(), h.ID().String())),
-		},
-		&reply,
-	)
-	if err != nil {
-		log.Panic(err)
-	}
-	log.Printf("bytes from %s (%s): %s\n", peerInfo.ID.String(), peerInfo.Addrs[0].String(), reply.Data)
+	log.Printf("Respons from hub: %s\n", reply.Data)
 
 	rpcHost := gorpc.NewServer(h, config.ProtocolId)
 	bridgeService := bridge.NewBridgeService(db)

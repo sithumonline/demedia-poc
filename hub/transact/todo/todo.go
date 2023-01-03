@@ -8,7 +8,6 @@ import (
 	"github.com/sithumonline/demedia-poc/core/models"
 	"github.com/sithumonline/demedia-poc/core/utility"
 	"github.com/sithumonline/demedia-poc/hub/client"
-	"github.com/sithumonline/demedia-poc/hub/internal/bridge_ql"
 	"log"
 	"net/http"
 )
@@ -30,7 +29,7 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 		return
 	}
 
-	reply, err := bridge_ql.QlCall(t.h, c, input, t.db[c.Request.Header["Peer"][0]], "createItem")
+	reply, err := utility.QlCall(t.h, c, input, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "createItem")
 	if err != nil {
 		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -96,7 +95,7 @@ func (t *TodoServiceServer) DeleteItem(c *gin.Context) {
 }
 
 func (t *TodoServiceServer) GetAllItem(c *gin.Context) {
-	reply, err := bridge_ql.QlCall(t.h, c, nil, t.db[c.Request.Header["Peer"][0]], "getAllItem")
+	reply, err := utility.QlCall(t.h, c, nil, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "getAllItem")
 	if err != nil {
 		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
