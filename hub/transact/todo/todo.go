@@ -4,15 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	gorpc "github.com/libp2p/go-libp2p-gorpc"
 	"github.com/libp2p/go-libp2p/core/host"
-	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/multiformats/go-multiaddr"
-	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/models"
 	"github.com/sithumonline/demedia-poc/core/utility"
 	"github.com/sithumonline/demedia-poc/hub/client"
-	"github.com/sithumonline/demedia-poc/peer/transact/bridge"
+	"github.com/sithumonline/demedia-poc/hub/internal/bridge_ql"
 	"log"
 	"net/http"
 )
@@ -34,52 +30,14 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 		return
 	}
 
-	body, err := json.Marshal(input)
+	reply, err := bridge_ql.QlCall(t.h, c, input, t.db[c.Request.Header["Peer"][0]], "createItem")
 	if err != nil {
-		log.Printf("failed to marshal input: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ma, err := multiaddr.NewMultiaddr(t.db[c.Request.Header["Peer"][0]])
-	if err != nil {
-		log.Panic(err)
-	}
-	peerInfo, err := peer.AddrInfoFromP2pAddr(ma)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	err = t.h.Connect(c, *peerInfo)
-	if err != nil {
-		log.Panic(err)
-	}
-	rpcClient := gorpc.NewClient(t.h, config.ProtocolId)
-
-	args, err := json.Marshal(bridge.BridgeCall{Method: "createItem", Body: body})
-	if err != nil {
-		log.Printf("failed to marshal args: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	var reply bridge.BridgeReply
-
-	err = rpcClient.Call(
-		peerInfo.ID,
-		"BridgeService",
-		"Ql",
-		bridge.BridgeArgs{Data: args},
-		&reply,
-	)
-	if err != nil {
-		log.Printf("failed to do rpc call: %v", err)
+		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	var d models.Todo
-
 	err = json.Unmarshal(reply.Data, &d)
 	if err != nil {
 		log.Printf("failed to unmarshal reply data: %v", err)
@@ -138,45 +96,14 @@ func (t *TodoServiceServer) DeleteItem(c *gin.Context) {
 }
 
 func (t *TodoServiceServer) GetAllItem(c *gin.Context) {
-	ma, err := multiaddr.NewMultiaddr(t.db[c.Request.Header["Peer"][0]])
+	reply, err := bridge_ql.QlCall(t.h, c, nil, t.db[c.Request.Header["Peer"][0]], "getAllItem")
 	if err != nil {
-		log.Panic(err)
-	}
-	peerInfo, err := peer.AddrInfoFromP2pAddr(ma)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	err = t.h.Connect(c, *peerInfo)
-	if err != nil {
-		log.Panic(err)
-	}
-	rpcClient := gorpc.NewClient(t.h, config.ProtocolId)
-
-	args, err := json.Marshal(bridge.BridgeCall{Method: "getAllItem", Body: nil})
-	if err != nil {
-		log.Printf("failed to marshal args: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	var reply bridge.BridgeReply
-
-	err = rpcClient.Call(
-		peerInfo.ID,
-		"BridgeService",
-		"Ql",
-		bridge.BridgeArgs{Data: args},
-		&reply,
-	)
-	if err != nil {
-		log.Printf("failed to do rpc call: %v", err)
+		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	var d []models.Todo
-
 	err = json.Unmarshal(reply.Data, &d)
 	if err != nil {
 		log.Printf("failed to unmarshal reply data: %v", err)

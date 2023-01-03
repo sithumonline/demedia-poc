@@ -45,7 +45,6 @@ func (t *BridgeService) Ql(ctx context.Context, argType BridgeArgs, replyType *B
 	b := newBridge(t.db)
 
 	call := BridgeCall{}
-
 	err := json.Unmarshal(argType.Data, &call)
 	if err != nil {
 		return err
