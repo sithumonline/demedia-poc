@@ -10,6 +10,7 @@ const (
 	ProtocolId         = "/p2p/1.0.0"
 	AddressFilePath    = "../host_address"
 	IpfsPrivateKeyPath = "../ipfsPrivateKey"
+	IpfsPublicKeyPath  = "../ipfsPublicKey"
 )
 
 func GetTargetAddressPort() (int, string) {

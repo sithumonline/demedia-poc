@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	gorpc "github.com/libp2p/go-libp2p-gorpc"
+	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/sithumonline/demedia-poc/core/config"
@@ -47,6 +48,14 @@ func main() {
 	h := utility.GetHost(port+1, true)
 	log.Printf("peer hosts ID: %s\n", h.ID().String())
 
+	pubKey, err := crypto.UnmarshalPublicKey([]byte(utility.ReadFile(config.IpfsPublicKeyPath)))
+	if err != nil {
+		log.Panic(err)
+	}
+	id, err := peer.IDFromPublicKey(pubKey)
+	if err != nil {
+		log.Panic(err)
+	}
 	ma, err := multiaddr.NewMultiaddr(utility.ReadFile(""))
 	if err != nil {
 		log.Panic(err)
@@ -55,6 +64,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	log.Printf("hub host ID and peerInfor ID is equeal : %t", id == peerInfo.ID)
 
 	err = h.Connect(ctx, *peerInfo)
 	if err != nil {
@@ -68,7 +78,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	fmt.Printf("bytes from %s (%s): %s\n", peerInfo.ID.String(), peerInfo.Addrs[0].String(), reply.Data)
+	log.Printf("bytes from %s (%s): %s\n", peerInfo.ID.String(), peerInfo.Addrs[0].String(), reply.Data)
 
 	log.Printf("hosting server on: %s\n", listen.Addr().String())
 	if err := s.Serve(listen); err != nil {
