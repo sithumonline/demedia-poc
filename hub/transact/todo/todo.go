@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/json"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	eth_crypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
 	"github.com/libp2p/go-libp2p/core/host"
@@ -49,14 +48,13 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 		Title: input.Title,
 		Task:  input.Task,
 	}
-	body, _ := json.Marshal(newInput)
-	hash := eth_crypto.Keccak256Hash(body)
-	sig, err := eth_crypto.Sign(hash.Bytes(), t.pk)
+	sig, err := utility.GetSIng(newInput, t.pk)
 	if err != nil {
+		log.Printf("failed to calculat sig: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	newInput.Signature = hexutil.Encode(sig)
+	newInput.Signature = sig
 
 	reply, err := utility.QlCall(t.h, c, newInput, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "createItem")
 	if err != nil {
@@ -144,18 +142,17 @@ func (t *TodoServiceServer) GetAllItem(c *gin.Context) {
 		if l.Signature == "" {
 			continue
 		}
-		sig, _ := hexutil.Decode(l.Signature)
 
-		publicKeyBytes := eth_crypto.FromECDSAPub(t.pubK)
 		newInput := models.Todo{
 			Title: l.Title,
 			Task:  l.Task,
 		}
-		body, _ := json.Marshal(newInput)
-		hash := eth_crypto.Keccak256Hash(body)
-		signatureNoRecoverID := sig[:len(sig)-1] // remove recovery id
-
-		verified := eth_crypto.VerifySignature(publicKeyBytes, hash.Bytes(), signatureNoRecoverID)
+		verified, err := utility.GetVerification(l.Signature, newInput, t.pubK)
+		if err != nil {
+			log.Printf("failed to varify sig: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 
 		todos = append(todos, models.Todo{
 			Id:         l.Id,
