@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/ethereum/go-ethereum v1.10.26
 	github.com/libp2p/go-libp2p v0.24.1
 	github.com/libp2p/go-libp2p-gorpc v0.5.0
 	github.com/multiformats/go-multiaddr v0.8.0
@@ -20,6 +21,7 @@ require (
 require (
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect

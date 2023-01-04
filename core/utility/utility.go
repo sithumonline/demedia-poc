@@ -1,10 +1,10 @@
 package utility
 
 import (
+	eth_crypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/multiformats/go-multiaddr"
-	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/models"
 	"github.com/sithumonline/demedia-poc/core/pb"
 	"log"
@@ -32,23 +32,16 @@ func SetIdModel(todo *models.Todo) *pb.ID {
 	}
 }
 
-func GenKeyPair(writeToFile bool) (crypto.PrivKey, error) {
-	privateKey, _, err := crypto.GenerateKeyPair(crypto.ECDSA, 256)
+func GenKeyPair() (crypto.PrivKey, error) {
+	key, err := eth_crypto.GenerateKey()
 	if err != nil {
 		return nil, err
 	}
-	encPrivateKey, err := crypto.MarshalPrivateKey(privateKey)
+	privateKey, err := crypto.UnmarshalSecp256k1PrivateKey(key.D.Bytes())
 	if err != nil {
 		return nil, err
 	}
-	if writeToFile {
-		WriteFile(string(encPrivateKey), config.IpfsPrivateKeyPath)
-		encPublicKey, err := crypto.MarshalPublicKey(privateKey.GetPublic())
-		if err != nil {
-			return nil, err
-		}
-		WriteFile(string(encPublicKey), config.IpfsPublicKeyPath)
-	}
+
 	return privateKey, nil
 }
 

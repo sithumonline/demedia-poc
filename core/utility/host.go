@@ -2,6 +2,7 @@ package utility
 
 import (
 	"fmt"
+	eth_crypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
@@ -15,14 +16,10 @@ func GetHost(port int, isPeer bool) host.Host {
 		err    error
 	)
 	if isPeer {
-		prvKey, err = GenKeyPair(false)
+		prvKey, err = GenKeyPair()
 	} else {
-		pk := ReadFile(config.IpfsPrivateKeyPath)
-		if pk == "file_does_not_exist" {
-			prvKey, err = GenKeyPair(true)
-		} else {
-			prvKey, err = crypto.UnmarshalPrivateKey([]byte(pk))
-		}
+		key, _ := eth_crypto.HexToECDSA(config.Hex)
+		prvKey, err = crypto.UnmarshalSecp256k1PrivateKey(key.D.Bytes())
 	}
 	if err != nil {
 		log.Panic(err)
