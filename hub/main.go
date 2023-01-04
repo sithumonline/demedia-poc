@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	gorpc "github.com/libp2p/go-libp2p-gorpc"
-	"github.com/multiformats/go-multiaddr"
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/utility"
 	"github.com/sithumonline/demedia-poc/hub/transact/ping"
@@ -29,12 +28,7 @@ func main() {
 	rpcHost := gorpc.NewServer(h, config.ProtocolId)
 	log.Printf("hub hosts ID: %s\n", h.ID().String())
 
-	addr := h.Addrs()[0]
-	ipfsAddr, err := multiaddr.NewMultiaddr("/ipfs/" + h.ID().String())
-	if err != nil {
-		log.Panic(err)
-	}
-	peerAddr := addr.Encapsulate(ipfsAddr)
+	peerAddr := utility.GetMultiAddr(h)
 	utility.WriteFile(peerAddr.String(), "")
 	log.Printf("hub listening on %s\n", peerAddr)
 

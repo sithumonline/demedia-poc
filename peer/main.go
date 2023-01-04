@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	gorpc "github.com/libp2p/go-libp2p-gorpc"
-	"github.com/multiformats/go-multiaddr"
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/pb"
 	"github.com/sithumonline/demedia-poc/core/utility"
@@ -44,12 +43,7 @@ func main() {
 	}()
 
 	h := utility.GetHost(port+1, true)
-	addr := h.Addrs()[0]
-	ipfsAddr, err := multiaddr.NewMultiaddr("/ipfs/" + h.ID().String())
-	if err != nil {
-		log.Panic(err)
-	}
-	peerAddr := addr.Encapsulate(ipfsAddr)
+	peerAddr := utility.GetMultiAddr(h)
 	log.Printf("peer listening on %s\n", peerAddr)
 
 	reply, err := utility.QlCall(h, ctx, peerAddr.String(), utility.ReadFile(""), "PingService", "Ping", "")

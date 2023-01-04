@@ -2,9 +2,12 @@ package utility
 
 import (
 	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/multiformats/go-multiaddr"
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/models"
 	"github.com/sithumonline/demedia-poc/core/pb"
+	"log"
 )
 
 func GetTodoModel(todo *pb.Todo) *models.Todo {
@@ -47,4 +50,14 @@ func GenKeyPair(writeToFile bool) (crypto.PrivKey, error) {
 		WriteFile(string(encPublicKey), config.IpfsPublicKeyPath)
 	}
 	return privateKey, nil
+}
+
+func GetMultiAddr(h host.Host) multiaddr.Multiaddr {
+	addr := h.Addrs()[0]
+	ipfsAddr, err := multiaddr.NewMultiaddr("/ipfs/" + h.ID().String())
+	if err != nil {
+		log.Panic(err)
+	}
+	peerAddr := addr.Encapsulate(ipfsAddr)
+	return peerAddr
 }
