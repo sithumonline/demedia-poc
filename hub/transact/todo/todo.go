@@ -56,7 +56,6 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	log.Printf("sig before the encoding : %x\n", sig)
 	newInput.Signature = hexutil.Encode(sig)
 
 	reply, err := utility.QlCall(t.h, c, newInput, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "createItem")
@@ -146,11 +145,17 @@ func (t *TodoServiceServer) GetAllItem(c *gin.Context) {
 			continue
 		}
 		sig, _ := hexutil.Decode(l.Signature)
-		log.Printf("sig after the encoding : %x\n", sig)
+
 		publicKeyBytes := eth_crypto.FromECDSAPub(t.pubK)
+		newInput := models.Todo{
+			Title: l.Title,
+			Task:  l.Task,
+		}
+		body, _ := json.Marshal(newInput)
+		hash := eth_crypto.Keccak256Hash(body)
 		signatureNoRecoverID := sig[:len(sig)-1] // remove recovery id
 
-		verified := eth_crypto.VerifySignature(publicKeyBytes, sig, signatureNoRecoverID)
+		verified := eth_crypto.VerifySignature(publicKeyBytes, hash.Bytes(), signatureNoRecoverID)
 
 		todos = append(todos, models.Todo{
 			Id:         l.Id,
