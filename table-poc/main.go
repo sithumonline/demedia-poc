@@ -46,6 +46,7 @@ func main() {
 	qL := []string{
 		fmt.Sprintf("select * from %s_user_items where user_id=1 order by created_at limit 3 offset 10", pk),
 		fmt.Sprintf("INSERT INTO %s_Customers (CustomerName, ContactName, Address, City, PostalCode, Country) VALUES ('Cardinal', 'Tom B. Erichsen', 'Skagen 21', 'Stavanger', '4006', 'Norway')", pk),
+		fmt.Sprintf("SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate FROM %s_Orders INNER JOIN Customers ON Orders.CustomerID=Customers.CustomerID", pk),
 	}
 
 	for _, q := range qL {
