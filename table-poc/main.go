@@ -43,17 +43,22 @@ func parse(sql string) (*ast.StmtNode, error) {
 
 func main() {
 	pk := "16Uiu2HAmP44YB5WWWdYccDYRzByum6fWDma13csdVUcySzwPMqYx"
-	q := fmt.Sprintf("select * from %s_user_items where user_id=1 order by created_at limit 3 offset 10", pk)
-
-	astNode, err := parse(q)
-	if err != nil {
-		fmt.Printf("parse error: %v\n", err.Error())
-		return
+	qL := []string{
+		fmt.Sprintf("select * from %s_user_items where user_id=1 order by created_at limit 3 offset 10", pk),
+		fmt.Sprintf("INSERT INTO %s_Customers (CustomerName, ContactName, Address, City, PostalCode, Country) VALUES ('Cardinal', 'Tom B. Erichsen', 'Skagen 21', 'Stavanger', '4006', 'Norway')", pk),
 	}
 
-	tn := extract(astNode)[0]
-	fmt.Printf("astNode tableName = %v\n", tn)
+	for _, q := range qL {
+		astNode, err := parse(q)
+		if err != nil {
+			fmt.Printf("parse error: %v\n", err.Error())
+			return
+		}
 
-	sp := strings.Split(tn, "_")
-	fmt.Printf("is valid table = %t\n", sp[0] == pk)
+		tn := extract(astNode)[0]
+		fmt.Printf("astNode tableName = %v\n", tn)
+
+		sp := strings.Split(tn, "_")
+		fmt.Printf("is valid table = %t\n", sp[0] == pk)
+	}
 }
