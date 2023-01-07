@@ -8,6 +8,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"io"
 
 	"github.com/moov-io/cryptfs"
@@ -100,7 +102,21 @@ func (bs *blobStorage) SaveFile(filepath string, data []byte) error {
 		return err
 	}
 
-	w, err := bs.bucket.NewWriter(context.Background(), filepath, nil)
+	before := func(asFunc func(interface{}) bool) error {
+		s3_req := &s3manager.UploadInput{}
+		ok := asFunc(&s3_req)
+		if ok {
+			s3_req.ACL = aws.String("public-read")
+		}
+
+		return nil
+	}
+
+	wr_opts := &blob.WriterOptions{
+		BeforeWrite: before,
+	}
+
+	w, err := bs.bucket.NewWriter(context.Background(), filepath, wr_opts)
 	if err != nil {
 		return err
 	}

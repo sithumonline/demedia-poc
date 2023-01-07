@@ -223,7 +223,6 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		BucketURI: "s3://peer?endpoint=127.0.0.1:9000&disableSSL=true&s3ForcePathStyle=true&region=us-east-2",
 	}
 	file, _ := c.FormFile("file")
-	log.Println(file.Filename)
 	blob, err := utility.NewBlobStorage(&cfg)
 	defer blob.Close()
 	if err != nil {
@@ -238,6 +237,7 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		return
 	}
 	fileBytes, err := io.ReadAll(f)
+	defer f.Close()
 	if err != nil {
 		log.Printf("failed to io read: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -267,6 +267,7 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		return
 	}
 	fileBytes_h, err := io.ReadAll(o)
+	defer o.Close()
 	if err != nil {
 		log.Printf("failed to h io read: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
