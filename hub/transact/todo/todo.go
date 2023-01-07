@@ -243,7 +243,8 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	err = blob.SaveFile(file.Filename, fileBytes)
+	filePath := file.Filename
+	err = blob.SaveFile(filePath, fileBytes)
 	if err != nil {
 		log.Printf("failed to save file: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -260,7 +261,7 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	o, err := blob.GetFile(file.Filename)
+	o, err := blob.GetFile(filePath)
 	if err != nil {
 		log.Printf("failed to get: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -273,11 +274,17 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	err = blob_h.SaveFile(file.Filename, fileBytes_h)
+	err = blob_h.SaveFile(filePath, fileBytes_h)
 	if err != nil {
 		log.Printf("failed to h save file: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": fmt.Sprintf("'%s' uploaded!", file.Filename)})
+	err = blob.Delete(filePath)
+	if err != nil {
+		log.Printf("failed to delete file: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": fmt.Sprintf("'%s' uploaded!", filePath)})
 }
