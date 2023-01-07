@@ -126,10 +126,43 @@ func (t *bridge) fetch(replyType *BridgeReply, body []byte) error {
 		return err
 	}
 
-	var result models.Todo
-	t.db.Raw(fetch.Query).Scan(&result)
+	rows, err := t.db.Raw(fetch.Query).Rows()
+	if err != nil {
+		return err
+	}
 
-	d, err := json.Marshal(result)
+	columns, err := rows.Columns()
+	if err != nil {
+		return err
+	}
+	count := len(columns)
+	tableData := make([]map[string]interface{}, 0)
+	values := make([]interface{}, count)
+	valuePtrs := make([]interface{}, count)
+	for rows.Next() {
+		for i := 0; i < count; i++ {
+			valuePtrs[i] = &values[i]
+		}
+		rows.Scan(valuePtrs...)
+		entry := make(map[string]interface{})
+		for i, col := range columns {
+			var v interface{}
+			val := values[i]
+			b, ok := val.([]byte)
+			if ok {
+				err = json.Unmarshal(b, &v)
+				if err != nil {
+					log.Printf("database calums log: %v", err)
+				}
+			} else {
+				v = val
+			}
+			entry[col] = v
+		}
+		tableData = append(tableData, entry)
+	}
+
+	d, err := json.Marshal(tableData)
 	if err != nil {
 		return err
 	}
