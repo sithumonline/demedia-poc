@@ -3,6 +3,7 @@ package bridge
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/sithumonline/demedia-poc/core/models"
 	"gorm.io/gorm"
@@ -55,9 +56,13 @@ func (t *BridgeService) Ql(ctx context.Context, argType BridgeArgs, replyType *B
 		return b.getAllItem(replyType)
 	case "createItem":
 		return b.createItem(replyType, call.Body)
+	case "fetch":
+		return b.fetch(replyType, call.Body)
+	case "readItem":
+		return b.readItem(replyType, call.Body)
+	default:
+		return errors.New("method not found")
 	}
-
-	return nil
 }
 
 func (t *bridge) getAllItem(replyType *BridgeReply) error {
@@ -92,5 +97,43 @@ func (t *bridge) createItem(replyType *BridgeReply, body []byte) error {
 		return err
 	}
 	replyType.Data = b
+	return nil
+}
+
+func (t *bridge) readItem(replyType *BridgeReply, body []byte) error {
+	var d models.Todo
+	err := json.Unmarshal(body, &d)
+	if err != nil {
+		return err
+	}
+	if result := t.db.Where("id = ?", d.Id).First(&d); result.Error != nil {
+		log.Printf("failed to find todo: %v", result.Error)
+		return result.Error
+	}
+
+	b, err := json.Marshal(d)
+	if err != nil {
+		return err
+	}
+	replyType.Data = b
+	return nil
+}
+
+func (t *bridge) fetch(replyType *BridgeReply, body []byte) error {
+	var fetch models.Fetch
+	err := json.Unmarshal(body, &fetch)
+	if err != nil {
+		return err
+	}
+
+	var result models.Todo
+	t.db.Raw(fetch.Query).Scan(&result)
+
+	d, err := json.Marshal(result)
+	if err != nil {
+		return err
+	}
+
+	replyType.Data = d
 	return nil
 }

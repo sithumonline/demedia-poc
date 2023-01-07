@@ -3,6 +3,7 @@ package utility
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/libp2p/go-libp2p-gorpc"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -26,7 +27,7 @@ func QlCall(
 ) {
 	body, err := json.Marshal(input)
 	if err != nil {
-		return bridge.BridgeReply{}, err
+		return bridge.BridgeReply{}, fmt.Errorf("QlCall, json marshal input: %w", err)
 	}
 
 	ma, err := multiaddr.NewMultiaddr(peerAddr)
@@ -46,7 +47,7 @@ func QlCall(
 
 	args, err := json.Marshal(bridge.BridgeCall{Method: method, Body: body})
 	if err != nil {
-		return bridge.BridgeReply{}, err
+		return bridge.BridgeReply{}, fmt.Errorf("QlCall, json marshal BridgeCall: %w", err)
 	}
 
 	var reply bridge.BridgeReply
@@ -59,7 +60,7 @@ func QlCall(
 		&reply,
 	)
 	if err != nil {
-		return bridge.BridgeReply{}, err
+		return bridge.BridgeReply{}, fmt.Errorf("QlCall, rpcClient call: %w", err)
 	}
 	return reply, nil
 }
