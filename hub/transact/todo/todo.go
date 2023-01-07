@@ -249,5 +249,34 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	cfg_h := utility.AuditTrail{
+		ID:        "peer_one",
+		BucketURI: "s3://hub?endpoint=127.0.0.1:9000&disableSSL=true&s3ForcePathStyle=true&region=us-east-2",
+	}
+	blob_h, err := utility.NewBlobStorage(&cfg_h)
+	defer blob_h.Close()
+	if err != nil {
+		log.Printf("failed to open blob h: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	o, err := blob.GetFile(file.Filename)
+	if err != nil {
+		log.Printf("failed to get: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	fileBytes_h, err := io.ReadAll(o)
+	if err != nil {
+		log.Printf("failed to h io read: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	err = blob_h.SaveFile(file.Filename, fileBytes_h)
+	if err != nil {
+		log.Printf("failed to h save file: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"data": fmt.Sprintf("'%s' uploaded!", file.Filename)})
 }
