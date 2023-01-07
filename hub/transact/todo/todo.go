@@ -286,5 +286,11 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": fmt.Sprintf("'%s' uploaded!", filePath)})
+	u, err := blob_h.GetFileURL(filePath)
+	if err != nil {
+		log.Printf("failed to get url: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": fmt.Sprintf("'%s' uploaded! link %s", filePath, u)})
 }

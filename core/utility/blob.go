@@ -147,3 +147,7 @@ func (bs *blobStorage) Delete(filepath string) error {
 
 	return nil
 }
+
+func (bs *blobStorage) GetFileURL(filepath string) (string, error) {
+	return bs.bucket.SignedURL(context.Background(), filepath, nil)
+}
