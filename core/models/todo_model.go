@@ -7,3 +7,7 @@ type Todo struct {
 	Signature  string `protobuf:"bytes,3,opt,name=signature,proto3" json:"signature,omitempty"`
 	IsVerified string `protobuf:"bytes,3,opt,name=is_verified,proto3" json:"is_verified,omitempty"`
 }
+
+type Fetch struct {
+	Query string `protobuf:"bytes,2,opt,name=query,proto3" json:"query,omitempty"`
+}

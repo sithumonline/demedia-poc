@@ -75,16 +75,33 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 }
 
 func (t *TodoServiceServer) ReadItem(c *gin.Context) {
-	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]])
-	defer conn.Close()
-	d, err := cl.ReadItem(context.Background(), utility.SetIdModel(&models.Todo{
-		Id: c.Param("id"),
-	}))
+	reply, err := utility.QlCall(t.h, c, models.Todo{Id: c.Param("id")}, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "readItem")
 	if err != nil {
-		log.Printf("failed to get todo: %v", err)
+		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	var d models.Todo
+	err = json.Unmarshal(reply.Data, &d)
+	if err != nil {
+		log.Printf("failed to unmarshal reply data: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	newInput := models.Todo{
+		Title: d.Title,
+		Task:  d.Task,
+	}
+	verified, err := utility.GetVerification(d.Signature, newInput, t.pubK)
+	if err != nil {
+		log.Printf("failed to varify sig: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	d.IsVerified = strconv.FormatBool(verified)
+
 	c.JSON(http.StatusOK, gin.H{"data": d})
 }
 
@@ -164,6 +181,32 @@ func (t *TodoServiceServer) GetAllItem(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": todos})
+}
+
+func (t *TodoServiceServer) Fetch(c *gin.Context) {
+	var input models.Fetch
+	if err := c.ShouldBindJSON(&input); err != nil {
+		log.Printf("failed to bind json: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	reply, err := utility.QlCall(t.h, c, input, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "fetch")
+	if err != nil {
+		log.Printf("failed to call peer: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var d interface{}
+	err = json.Unmarshal(reply.Data, &d)
+	if err != nil {
+		log.Printf("failed to unmarshal reply data: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": d})
 }
 
 func (t *TodoServiceServer) GetAllPeer(c *gin.Context) {
