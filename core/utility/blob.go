@@ -54,7 +54,7 @@ type blobStorage struct {
 	cryptor *cryptfs.FS
 }
 
-func newBlobStorage(cfg *AuditTrail) (*blobStorage, error) {
+func NewBlobStorage(cfg *AuditTrail) (*blobStorage, error) {
 	storage := &blobStorage{id: cfg.ID}
 
 	bucket, err := blob.OpenBucket(context.Background(), cfg.BucketURI)

@@ -25,6 +25,7 @@ func main() {
 	r.DELETE("/todo/:id", todoService.DeleteItem)
 	r.GET("/peer", todoService.GetAllPeer)
 	r.POST("/fetch", todoService.Fetch)
+	r.POST("/file", todoService.FileHandle)
 
 	rpcHost := gorpc.NewServer(h, config.ProtocolId)
 	log.Printf("hub hosts ID: %s\n", h.ID().String())

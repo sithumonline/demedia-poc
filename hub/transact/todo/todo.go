@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/json"
+	"fmt"
 	eth_crypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
 	"github.com/libp2p/go-libp2p/core/host"
@@ -11,6 +12,7 @@ import (
 	"github.com/sithumonline/demedia-poc/core/models"
 	"github.com/sithumonline/demedia-poc/core/utility"
 	"github.com/sithumonline/demedia-poc/hub/client"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -211,4 +213,41 @@ func (t *TodoServiceServer) Fetch(c *gin.Context) {
 
 func (t *TodoServiceServer) GetAllPeer(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": t.db})
+}
+
+func (t TodoServiceServer) FileHandle(c *gin.Context) {
+	//accessKeyID := "VEiR7k4WI4t5EBXJ"
+	//secretAccessKey := "MWVKqz6wepesaigcPXOL4IbQqb2Ni0T1"
+	cfg := utility.AuditTrail{
+		ID:        "peer_one",
+		BucketURI: "s3://peer?endpoint=127.0.0.1:9000&disableSSL=true&s3ForcePathStyle=true&region=us-east-2",
+	}
+	file, _ := c.FormFile("file")
+	log.Println(file.Filename)
+	blob, err := utility.NewBlobStorage(&cfg)
+	defer blob.Close()
+	if err != nil {
+		log.Printf("failed to open blob: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	f, err := file.Open()
+	if err != nil {
+		log.Printf("failed to open file: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	fileBytes, err := io.ReadAll(f)
+	if err != nil {
+		log.Printf("failed to io read: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	err = blob.SaveFile(file.Filename, fileBytes)
+	if err != nil {
+		log.Printf("failed to save file: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": fmt.Sprintf("'%s' uploaded!", file.Filename)})
 }
