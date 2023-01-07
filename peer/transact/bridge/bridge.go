@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"github.com/sithumonline/demedia-poc/core/models"
+	"github.com/sithumonline/demedia-poc/peer/internal"
 	"gorm.io/gorm"
 	"log"
 )
@@ -126,7 +127,16 @@ func (t *bridge) fetch(replyType *BridgeReply, body []byte) error {
 		return err
 	}
 
-	rows, err := t.db.Raw(fetch.Query).Rows()
+	query := fetch.Query
+	ok, err := internal.CheckQuery(query)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("permission granted restive data form target table")
+	}
+
+	rows, err := t.db.Raw(query).Rows()
 	if err != nil {
 		return err
 	}
@@ -152,7 +162,7 @@ func (t *bridge) fetch(replyType *BridgeReply, body []byte) error {
 			if ok {
 				err = json.Unmarshal(b, &v)
 				if err != nil {
-					log.Printf("database calums log: %v", err)
+					log.Printf("database column error: %v", err)
 				}
 			} else {
 				v = val

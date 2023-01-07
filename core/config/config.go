@@ -12,6 +12,7 @@ const (
 	IpfsPrivateKeyPath = "../ipfsPrivateKey"
 	IpfsPublicKeyPath  = "../ipfsPublicKey"
 	Hex                = "fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19"
+	HubHostId          = "16Uiu2HAmP44YB5WWWdYccDYRzByum6fWDma13csdVUcySzwPMqYx"
 )
 
 func GetTargetAddressPort() (int, string) {
