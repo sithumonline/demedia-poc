@@ -7,6 +7,7 @@ import (
 	"fmt"
 	eth_crypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
+	"github.com/imroc/req/v3"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/models"
@@ -250,6 +251,21 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	u, err := blob.GetFileURL(filePath)
+	if err != nil {
+		log.Printf("failed to get url: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	reqClient := req.C()        // Use C() to create a client.
+	resp, err := reqClient.R(). // Use R() to create a request.
+					Get(u)
+	if err != nil {
+		log.Printf("failed to get file from url: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer resp.Body.Close()
 	cfg_h := utility.AuditTrail{
 		ID:        "peer_one",
 		BucketURI: "s3://hub?endpoint=127.0.0.1:9000&disableSSL=true&s3ForcePathStyle=true&region=us-east-2",
@@ -261,14 +277,7 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	o, err := blob.GetFile(filePath)
-	if err != nil {
-		log.Printf("failed to get: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	fileBytes_h, err := io.ReadAll(o)
-	defer o.Close()
+	fileBytes_h, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("failed to h io read: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -286,11 +295,11 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	u, err := blob_h.GetFileURL(filePath)
+	u_h, err := blob_h.GetFileURL(filePath)
 	if err != nil {
-		log.Printf("failed to get url: %v", err)
+		log.Printf("failed to h get url: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": fmt.Sprintf("'%s' uploaded! link %s", filePath, u)})
+	c.JSON(http.StatusOK, gin.H{"data": fmt.Sprintf("'%s' uploaded! link %s", filePath, u_h)})
 }
