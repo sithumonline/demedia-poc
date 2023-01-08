@@ -133,7 +133,7 @@ func (t *bridge) fetch(replyType *BridgeReply, body []byte) error {
 		return err
 	}
 	if !ok {
-		return errors.New("permission granted restive data form target table")
+		return errors.New("permission denied to the target table")
 	}
 
 	rows, err := t.db.Raw(query).Rows()
