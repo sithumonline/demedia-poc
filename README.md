@@ -54,6 +54,7 @@ curl --location --request POST '0.0.0.0:8080/todo' \
 ### MinIO Docker
 
 ```dockerfile
+mkdir -p ~/minio/data &&
 docker run \
    -p 9000:9000 \
    -p 9090:9090 \
