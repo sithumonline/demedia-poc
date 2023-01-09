@@ -11,3 +11,9 @@ type Todo struct {
 type Fetch struct {
 	Query string `protobuf:"bytes,2,opt,name=query,proto3" json:"query,omitempty"`
 }
+
+type File struct {
+	Data []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Link string `protobuf:"bytes,2,opt,name=link,proto3" json:"link,omitempty"`
+}

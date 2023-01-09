@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/json"
-	"fmt"
 	eth_crypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
@@ -12,6 +11,7 @@ import (
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/models"
 	"github.com/sithumonline/demedia-poc/core/utility"
+	"github.com/sithumonline/demedia-poc/core/utility/blob"
 	"github.com/sithumonline/demedia-poc/hub/client"
 	"io"
 	"log"
@@ -217,20 +217,7 @@ func (t *TodoServiceServer) GetAllPeer(c *gin.Context) {
 }
 
 func (t TodoServiceServer) FileHandle(c *gin.Context) {
-	//accessKeyID := "VEiR7k4WI4t5EBXJ"
-	//secretAccessKey := "MWVKqz6wepesaigcPXOL4IbQqb2Ni0T1"
-	cfg := utility.AuditTrail{
-		ID:        "peer_one",
-		BucketURI: "s3://peer?endpoint=127.0.0.1:9000&disableSSL=true&s3ForcePathStyle=true&region=us-east-2",
-	}
 	file, _ := c.FormFile("file")
-	blob, err := utility.NewBlobStorage(&cfg)
-	defer blob.Close()
-	if err != nil {
-		log.Printf("failed to open blob: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
 	f, err := file.Open()
 	if err != nil {
 		log.Printf("failed to open file: %v", err)
@@ -239,67 +226,60 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 	}
 	fileBytes, err := io.ReadAll(f)
 	defer f.Close()
+
+	input := models.File{Data: fileBytes, Name: file.Filename}
+	reply, err := utility.QlCall(t.h, c, input, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "file")
 	if err != nil {
-		log.Printf("failed to io read: %v", err)
+		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	filePath := file.Filename
-	err = blob.SaveFile(filePath, fileBytes)
+
+	var d models.File
+	err = json.Unmarshal(reply.Data, &d)
 	if err != nil {
-		log.Printf("failed to save file: %v", err)
+		log.Printf("failed to unmarshal reply data: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	u, err := blob.GetFileURL(filePath)
-	if err != nil {
-		log.Printf("failed to get url: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+
 	reqClient := req.C()        // Use C() to create a client.
 	resp, err := reqClient.R(). // Use R() to create a request.
-					Get(u)
+					Get(d.Link)
+	defer resp.Body.Close()
 	if err != nil {
 		log.Printf("failed to get file from url: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer resp.Body.Close()
-	cfg_h := utility.AuditTrail{
+	cfg := blob.AuditTrail{
 		ID:        "hub_one",
 		BucketURI: "s3://hub?endpoint=127.0.0.1:9000&disableSSL=true&s3ForcePathStyle=true&region=us-east-2",
 	}
-	blob_h, err := utility.NewBlobStorage(&cfg_h)
-	defer blob_h.Close()
+	blob, err := blob.NewBlobStorage(&cfg)
+	defer blob.Close()
 	if err != nil {
 		log.Printf("failed to open blob h: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	fileBytes_h, err := io.ReadAll(resp.Body)
+	filebytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("failed to h io read: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	err = blob_h.SaveFile(filePath, fileBytes_h)
+	err = blob.SaveFile(d.Name, filebytes)
 	if err != nil {
 		log.Printf("failed to h save file: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	err = blob.Delete(filePath)
-	if err != nil {
-		log.Printf("failed to delete file: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	u_h, err := blob_h.GetFileURL(filePath)
+	u, err := blob.GetFileURL(d.Name)
 	if err != nil {
 		log.Printf("failed to h get url: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": fmt.Sprintf("'%s' uploaded! link %s", filePath, u_h)})
+	c.JSON(http.StatusOK, gin.H{"data": models.File{Name: d.Name, Link: u}})
 }

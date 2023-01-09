@@ -6,7 +6,8 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"github.com/sithumonline/demedia-poc/core/models"
-	"github.com/sithumonline/demedia-poc/peer/internal"
+	"github.com/sithumonline/demedia-poc/core/utility/blob"
+	"github.com/sithumonline/demedia-poc/core/utility/parser"
 	"gorm.io/gorm"
 	"log"
 )
@@ -61,6 +62,8 @@ func (t *BridgeService) Ql(ctx context.Context, argType BridgeArgs, replyType *B
 		return b.fetch(replyType, call.Body)
 	case "readItem":
 		return b.readItem(replyType, call.Body)
+	case "file":
+		return b.file(replyType, call.Body)
 	default:
 		return errors.New("method not found")
 	}
@@ -128,7 +131,7 @@ func (t *bridge) fetch(replyType *BridgeReply, body []byte) error {
 	}
 
 	query := fetch.Query
-	ok, err := internal.CheckQuery(query)
+	ok, err := parser.CheckQuery(query)
 	if err != nil {
 		return err
 	}
@@ -178,5 +181,38 @@ func (t *bridge) fetch(replyType *BridgeReply, body []byte) error {
 	}
 
 	replyType.Data = d
+	return nil
+}
+
+func (t *bridge) file(replyType *BridgeReply, body []byte) error {
+	var fetch models.File
+	err := json.Unmarshal(body, &fetch)
+	if err != nil {
+		return err
+	}
+
+	cfg := blob.AuditTrail{
+		ID:        "peer_one",
+		BucketURI: "s3://peer?endpoint=127.0.0.1:9000&disableSSL=true&s3ForcePathStyle=true&region=us-east-2",
+	}
+	blob, err := blob.NewBlobStorage(&cfg)
+	defer blob.Close()
+	if err != nil {
+		return err
+	}
+	err = blob.SaveFile(fetch.Name, fetch.Data)
+	if err != nil {
+		return err
+	}
+	u, err := blob.GetFileURL(fetch.Name)
+	if err != nil {
+		return err
+	}
+
+	b, err := json.Marshal(models.File{Link: u, Name: fetch.Name})
+	if err != nil {
+		return err
+	}
+	replyType.Data = b
 	return nil
 }
