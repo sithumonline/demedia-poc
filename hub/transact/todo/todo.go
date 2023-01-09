@@ -267,7 +267,7 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 	cfg_h := utility.AuditTrail{
-		ID:        "peer_one",
+		ID:        "hub_one",
 		BucketURI: "s3://hub?endpoint=127.0.0.1:9000&disableSSL=true&s3ForcePathStyle=true&region=us-east-2",
 	}
 	blob_h, err := utility.NewBlobStorage(&cfg_h)
