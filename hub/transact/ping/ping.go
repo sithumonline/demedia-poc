@@ -46,3 +46,18 @@ func (t *PingService) Ping(ctx context.Context, argType bridge.BridgeArgs, reply
 	replyType.Data = []byte("Pong")
 	return nil
 }
+
+func RumDbCleaner(t *PingService) {
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		for range ticker.C {
+			for k, e := range t.db {
+				ts := time.Now().Sub(e.LastUpdate)
+				tg := 5 * time.Second
+				if ts > tg {
+					delete(t.db, k)
+				}
+			}
+		}
+	}()
+}
