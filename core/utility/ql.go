@@ -10,7 +10,6 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/peer/transact/bridge"
-	"log"
 )
 
 func QlCall(
@@ -41,7 +40,8 @@ func QlCall(
 
 	err = h.Connect(ctx, *peerInfo)
 	if err != nil {
-		log.Panic(err)
+		return bridge.BridgeReply{}, fmt.Errorf("QlCall, host connection: \n%w", err)
+		//return bridge.BridgeReply{}, err
 	}
 	rpcClient := rpc.NewClient(h, config.ProtocolId)
 

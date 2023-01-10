@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	gorpc "github.com/libp2p/go-libp2p-gorpc"
 	"github.com/sithumonline/demedia-poc/core/config"
 	"github.com/sithumonline/demedia-poc/core/utility"
@@ -10,6 +11,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -35,11 +38,27 @@ func main() {
 		}
 	}()
 
-	reply, err := utility.QlCall(h, ctx, peerAddr.String(), utility.ReadFile(""), "PingService", "Ping", "")
-	if err != nil {
-		log.Panic(err)
-	}
-	log.Printf("Respons from hub: %s\n", reply.Data)
+	go func() {
+		ticker := time.NewTicker(3 * time.Second)
+		for range ticker.C {
+			reply, err := utility.QlCall(h, ctx, peerAddr.String(), utility.ReadFile(""), "PingService", "Ping", "")
+			if err != nil {
+				if strings.Contains(fmt.Sprint(err), "connection refused") {
+					log.Println("connection refused, please check the address")
+					ticker.Reset(10 * time.Second)
+					continue
+				} else if strings.Contains(fmt.Sprint(err), "dial backoff") {
+					ticker.Reset(15 * time.Second)
+					log.Print(err)
+					continue
+				} else {
+					log.Panic(err)
+				}
+			}
+			log.Printf("Respons from hub: %s\n", reply.Data)
+			ticker.Reset(5 * time.Second)
+		}
+	}()
 
 	rpcHost := gorpc.NewServer(h, config.ProtocolId)
 	db := database.Database("postgres://tenulyil:jJzwdOfsftWnJ9T16zWvW3zxallU-8J0@mahmud.db.elephantsql.com/tenulyil")
