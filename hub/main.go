@@ -13,7 +13,7 @@ import (
 func main() {
 	r := gin.Default()
 
-	var db = make(map[string]string)
+	var db = make(map[string]ping.PeerInfo)
 	port, _ := config.GetTargetAddressPort()
 	h := utility.GetHost(port, false)
 	todoService := todo.NewTodoServiceServer(db, h)

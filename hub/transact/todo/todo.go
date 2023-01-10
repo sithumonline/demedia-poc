@@ -13,6 +13,7 @@ import (
 	"github.com/sithumonline/demedia-poc/core/utility"
 	"github.com/sithumonline/demedia-poc/core/utility/blob"
 	"github.com/sithumonline/demedia-poc/hub/client"
+	"github.com/sithumonline/demedia-poc/hub/transact/ping"
 	"io"
 	"log"
 	"net/http"
@@ -20,13 +21,13 @@ import (
 )
 
 type TodoServiceServer struct {
-	db   map[string]string
+	db   map[string]ping.PeerInfo
 	h    host.Host
 	pk   *ecdsa.PrivateKey
 	pubK *ecdsa.PublicKey
 }
 
-func NewTodoServiceServer(db map[string]string, h host.Host) TodoServiceServer {
+func NewTodoServiceServer(db map[string]ping.PeerInfo, h host.Host) TodoServiceServer {
 	pk, err := eth_crypto.HexToECDSA(config.Hex)
 	if err != nil {
 		log.Fatal(err)
@@ -59,7 +60,7 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 	}
 	newInput.Signature = sig
 
-	reply, err := utility.QlCall(t.h, c, newInput, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "createItem")
+	reply, err := utility.QlCall(t.h, c, newInput, t.db[c.Request.Header["Peer"][0]].Address, "BridgeService", "Ql", "createItem")
 	if err != nil {
 		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -78,7 +79,7 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 }
 
 func (t *TodoServiceServer) ReadItem(c *gin.Context) {
-	reply, err := utility.QlCall(t.h, c, models.Todo{Id: c.Param("id")}, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "readItem")
+	reply, err := utility.QlCall(t.h, c, models.Todo{Id: c.Param("id")}, t.db[c.Request.Header["Peer"][0]].Address, "BridgeService", "Ql", "readItem")
 	if err != nil {
 		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -116,7 +117,7 @@ func (t *TodoServiceServer) UpdateItem(c *gin.Context) {
 		return
 	}
 	input.Id = c.Param("id")
-	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]])
+	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]].Address)
 	defer conn.Close()
 	d, err := cl.UpdateItem(context.Background(), utility.SetTodoModel(&input))
 	if err != nil {
@@ -128,7 +129,7 @@ func (t *TodoServiceServer) UpdateItem(c *gin.Context) {
 }
 
 func (t *TodoServiceServer) DeleteItem(c *gin.Context) {
-	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]])
+	cl, conn := client.Client(t.db[c.Request.Header["Peer"][0]].Address)
 	defer conn.Close()
 	d, err := cl.DeleteItem(context.Background(), utility.SetIdModel(&models.Todo{
 		Id: c.Param("id"),
@@ -142,7 +143,7 @@ func (t *TodoServiceServer) DeleteItem(c *gin.Context) {
 }
 
 func (t *TodoServiceServer) GetAllItem(c *gin.Context) {
-	reply, err := utility.QlCall(t.h, c, nil, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "getAllItem")
+	reply, err := utility.QlCall(t.h, c, nil, t.db[c.Request.Header["Peer"][0]].Address, "BridgeService", "Ql", "getAllItem")
 	if err != nil {
 		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -194,7 +195,7 @@ func (t *TodoServiceServer) Fetch(c *gin.Context) {
 		return
 	}
 
-	reply, err := utility.QlCall(t.h, c, input, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "fetch")
+	reply, err := utility.QlCall(t.h, c, input, t.db[c.Request.Header["Peer"][0]].Address, "BridgeService", "Ql", "fetch")
 	if err != nil {
 		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -228,7 +229,7 @@ func (t TodoServiceServer) FileHandle(c *gin.Context) {
 	defer f.Close()
 
 	input := models.File{Data: fileBytes, Name: file.Filename}
-	reply, err := utility.QlCall(t.h, c, input, t.db[c.Request.Header["Peer"][0]], "BridgeService", "Ql", "file")
+	reply, err := utility.QlCall(t.h, c, input, t.db[c.Request.Header["Peer"][0]].Address, "BridgeService", "Ql", "file")
 	if err != nil {
 		log.Printf("failed to call peer: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
