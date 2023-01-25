@@ -35,7 +35,7 @@ func main() {
 	log.Printf("hub listening on %s\n", peerAddr)
 
 	pingService := ping.NewPingService(db)
-	ping.RumDbCleaner(pingService)
+	ping.RunDbCleaner(pingService)
 	if err := rpcHost.Register(pingService); err != nil {
 		log.Panic("failed to register rpc server", "err", err)
 	}

@@ -28,7 +28,7 @@ func NewPingService(db map[string]PeerInfo) *PingService {
 	return &PingService{db: db}
 }
 
-func (t *PingService) Ping(ctx context.Context, argType bridge.BridgeArgs, replyType *bridge.BridgeReply) error {
+func (t *PingService) Ping(_ context.Context, argType bridge.BridgeArgs, replyType *bridge.BridgeReply) error {
 	call := bridge.BridgeCall{}
 	err := json.Unmarshal(argType.Data, &call)
 	if err != nil {
@@ -47,7 +47,7 @@ func (t *PingService) Ping(ctx context.Context, argType bridge.BridgeArgs, reply
 	return nil
 }
 
-func RumDbCleaner(t *PingService) {
+func RunDbCleaner(t *PingService) {
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		for range ticker.C {
