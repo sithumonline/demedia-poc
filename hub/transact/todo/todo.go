@@ -4,6 +4,11 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/json"
+	"io"
+	"log"
+	"net/http"
+	"strconv"
+
 	eth_crypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
@@ -14,10 +19,6 @@ import (
 	"github.com/sithumonline/demedia-poc/core/utility/blob"
 	"github.com/sithumonline/demedia-poc/hub/client"
 	"github.com/sithumonline/demedia-poc/hub/transact/ping"
-	"io"
-	"log"
-	"net/http"
-	"strconv"
 )
 
 type TodoServiceServer struct {
@@ -52,7 +53,7 @@ func (t *TodoServiceServer) CreateItem(c *gin.Context) {
 		Title: input.Title,
 		Task:  input.Task,
 	}
-	sig, err := utility.GetSIng(newInput, t.pk)
+	sig, err := utility.GetSing(newInput, t.pk)
 	if err != nil {
 		log.Printf("failed to calculat sig: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

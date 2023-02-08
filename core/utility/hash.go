@@ -3,11 +3,12 @@ package utility
 import (
 	"crypto/ecdsa"
 	"encoding/json"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-func GetSIng(input interface{}, prv *ecdsa.PrivateKey) (string, error) {
+func GetSing(input interface{}, prv *ecdsa.PrivateKey) (string, error) {
 	body, err := json.Marshal(input)
 	if err != nil {
 		return "", err
